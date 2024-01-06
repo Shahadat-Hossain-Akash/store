@@ -2,7 +2,7 @@ venv/
 
 .pytest_cache
 **__pycache__/
-**__migrations__/
+**/migrations/
 db.sqlite3
 .env
 .coverage
