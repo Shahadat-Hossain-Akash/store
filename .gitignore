@@ -1,0 +1,12 @@
+venv/
+
+.pytest_cache
+**__pycache__/
+**__migrations__/
+db.sqlite3
+.env
+.coverage
+.vscode
+schema.yml
+htmlcov/
+.DS_store

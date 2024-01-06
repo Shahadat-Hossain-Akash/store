@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Products</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+        <ul>
+            {% comment %} {% for p in products %}
+            <li>
+                <div style="display: flex; width: 100%; column-gap: 1rem; align-items: center">
+                    <p>Order ID: {{ p.id }}</p>
+                    <p>Customer: {{ p.customer.first_name }}</p>
+                    {% for order_item in p.orderitem_set.all %}
+                        <p>Product: {{ order_item.product.title }}</p>
+                        <strong>Price: {{ order_item.product.price }}</strong>
+                    {% endfor %}
+                </div>
+            </li>
+        {% endfor %} {% endcomment %}
+    </ul>
+    </body>
+</html>
