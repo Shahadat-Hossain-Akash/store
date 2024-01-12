@@ -14,6 +14,7 @@ from .models import Collection,Product,Customer,Order,OrderItem
 class CollectionAdmin(admin.ModelAdmin):
     list_display = ['title','product_count']
     search_fields = ['title']
+    show_full_result_count  =False
     
     @admin.display(ordering="product_count")
     def product_count(self, collection):
@@ -73,12 +74,23 @@ class ProductAdmin(admin.ModelAdmin):
         self.message_user(request, f"{updated_inventory} products were successfully updated",)
     
 class CustomerAdmin(admin.ModelAdmin):
-    list_display=['first_name', 'last_name', 'membership', 'email']
+    list_display=['username', 'first_name', 'last_name', 'membership', 'email', 'orders']
     list_per_page = 20
     list_editable = ['membership']
-    search_fields = ['first_name__startswith', 'last_name__startswith']
+    list_select_related = ['user']
+    search_fields = ['first_name__startswith', 'last_name__startswith', 'email']
+    ordering = ['user__first_name', 'user__last_name']
     show_full_result_count = False
+    autocomplete_fields = ['user']
     
+    @admin.display(ordering="orders_count")
+    def orders(self, customer):
+        url = (reverse('admin:storefront_order_changelist')+'?'+ urlencode({'customer__id': str(customer.id)}))
+        return format_html('<a href={}>{}</a>', url, customer.orders_count)
+    
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+        return super().get_queryset(request).annotate(orders_count=Count('order'))
+
 class OrderItemInline(admin.TabularInline):
     autocomplete_fields = ['product']
     model = OrderItem
