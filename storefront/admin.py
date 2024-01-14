@@ -1,12 +1,14 @@
+import django.db
 from typing import Any
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
 from django.http.request import HttpRequest
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from django.db.models import Count, Q
 from django.utils.html import format_html, urlencode
-from .models import Collection,Product,Customer,Order,OrderItem
+from .models import Collection,Product,Customer,Order,OrderItem,ProductImage
 
 
 
@@ -27,19 +29,27 @@ class CollectionAdmin(admin.ModelAdmin):
 class InventoryFilter(admin.SimpleListFilter):
     title = 'inventory'
     parameter_name = 'inventory'
-    medium = '>10 and <90'
+    MEDIUM_RANGE = '>10 and <90'
     high = '>=90'
     
     def lookups(self, request: Any, model_admin: Any) -> list[tuple[Any, str]]:
-        return [("<10", 'low'),('>10 and <90', 'medium'),('>=90', 'high'),]
+        return [("<10", 'low'),(self.MEDIUM_RANGE, 'medium'),(self.high, 'high'),]
     
     def queryset(self, request: Any, queryset: QuerySet[Any]) -> QuerySet[Any] | None:
         if self.value() == '<10':
             return queryset.filter(inventory__lt=10)
-        elif self.value() == '>10 and <90':
+        elif self.value() == self.MEDIUM_RANGE:
             return queryset.filter(Q(inventory__gte=10) & Q(inventory__lt=90))
-        elif self.value() == '>=90':
+        elif self.value() == self.high:
             return queryset.filter(Q(inventory__gte=90))
+
+class ProductImageInline(admin.TabularInline):
+    readonly_fields = ['thumbnail']
+    model = ProductImage
+    
+    def thumbnail(self, instance):
+        if instance.image.name != '':
+            return mark_safe(f'<img src="{instance.image.url}" alt="" style="width:50px; height:50px; object-fit:cover;"/>')
 
 class ProductAdmin(admin.ModelAdmin):
     autocomplete_fields=['collection']
@@ -47,6 +57,7 @@ class ProductAdmin(admin.ModelAdmin):
         "slug": ["title"]
     }
     actions = ['clear_inventory']
+    inlines = [ProductImageInline]
     list_display=['title', 'price', 'collection', 'inventory_status']
     list_select_related=['collection']
     list_per_page = 20

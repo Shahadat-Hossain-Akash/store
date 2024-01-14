@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from store.settings import DEBUG, MEDIA_ROOT, MEDIA_URL, STATIC_URL
 import debug_toolbar
 
 urlpatterns = [
@@ -25,3 +28,6 @@ urlpatterns = [
     path("auth/", include('djoser.urls')),
     path("auth/", include('djoser.urls.jwt'))
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
