@@ -1,7 +1,7 @@
 import django.db.models.query
 from django.db import transaction
 from rest_framework import serializers
-from storefront.models import Collection, Product, Review, Cart, CartItem, Customer, Order, OrderItem
+from storefront.models import Collection, Product, Review, Cart, CartItem, Customer, Order, OrderItem, ProductImage
 from .signals import order_created
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -12,11 +12,22 @@ class CollectionSerializer(serializers.ModelSerializer):
     
     products_count = serializers.IntegerField(read_only=True)
     
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    
+    def create(self, validated_data):
+        
+        product_id = self.context['product_id']
+        return ProductImage.objects.create(product_id=product_id, **validated_data)
+    class Meta:
+        model = ProductImage
+        fields = ['image']
 class ProductSerializer(serializers.ModelSerializer):
 
+    images = ProductImageSerializer(many=True)
     class Meta:
         model = Product
-        fields = ['id', 'title', 'slug', 'description', 'inventory', 'price','collection']
+        fields = ['id', 'title', 'slug', 'description', 'inventory', 'price', 'images', 'collection']
 
 
 class SimpleProductSerializer(serializers.ModelSerializer):
@@ -172,3 +183,4 @@ class CreateOrderSerializer(serializers.Serializer):
             order_created.send_robust(sender=__class__, order=order)
 
             return order
+        

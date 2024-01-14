@@ -8,21 +8,23 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.decorators import action
 from .serializers import CollectionSerializer, ProductSerializer, ReviewSerializer, CartSerializer, \
                         CartItemSerializer, AddCartItemSerializer, UpdateCartItemSerializer, CustomerSerializer, \
-                        OrderSerializer, OrderItemSerializer, CreateOrderSerializer, UpdateOrderSerializer
-from .models import Collection, Order, OrderItem, Product, Review, Cart, CartItem, Customer
+                        OrderSerializer, OrderItemSerializer, CreateOrderSerializer, UpdateOrderSerializer, ProductImageSerializer
+from .models import (Cart, CartItem, Collection, Customer, Order, OrderItem, Product, ProductImage,
+    Review)
 from .filters import ProductFilter
 from .permissions import IsAdminOrReadOnly
 from rest_framework.permissions import IsAuthenticated
 
 class ProductViewSet(ModelViewSet):
     
-    queryset = Product.objects.select_related('collection').prefetch_related('promotions').all()
+    queryset = Product.objects.select_related('collection',).prefetch_related('promotions', 'images').all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ProductFilter
     search_fields = ['title','id']
     ordering_fields = ['id', 'title', 'price', 'collection__id']
     permission_classes = [IsAdminOrReadOnly]
+    
     
     def destroy(self, request, *args, **kwargs):
         if OrderItem.objects.filter(product__id=kwargs['pk']).count() > 0:
@@ -84,7 +86,7 @@ class CustomerViewSet(ModelViewSet):
     
     @action(detail=False, methods=('GET','PUT'), permission_classes=[IsAdminOrReadOnly])
     def me(self, request):
-        customer, created = Customer.objects.get_or_create(user_id=request.user.id)
+        customer = Customer.objects.get(user_id=request.user.id)
         if request.method == "GET":
             serializer = CustomerSerializer(customer)
             return Response(serializer.data)
@@ -128,3 +130,13 @@ class OrderViewSet(ModelViewSet):
             return Order.objects.select_related('customer').all()
         customer_id = Customer.objects.get(user_id=user.id)
         return Order.objects.select_related('customer').filter(customer_id=customer_id)
+    
+class ProductImageViewSet(ModelViewSet):
+    
+    serializer_class = ProductImageSerializer
+    
+    def get_serializer_context(self):
+        return {'product_id': self.kwargs['product_pk']}
+    
+    def get_queryset(self):
+        return ProductImage.objects.select_related('product').filter(product_id=self.kwargs['product_pk'])
