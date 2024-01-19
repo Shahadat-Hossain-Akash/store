@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django_filters',
     "djoser",
     'corsheaders',
+    'silk',
 ]
 
 MIDDLEWARE = [
@@ -50,9 +51,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+# if DEBUG:
+#     MIDDLEWARE += ['silk.middleware.SilkyMiddleware']
 
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -105,7 +109,10 @@ DATABASES = {
         'HOST': os.environ.get('HOST'),
         'USER': os.environ.get('USER'),
         'PASSWORD': os.environ.get('PASSWORD'),
+        'OPTIONS': {
+            "init_command": "SET GLOBAL max_connections = 1000000",
     }
+    },
 }
 
 
@@ -173,5 +180,15 @@ DJOSER = {
     'SERIALIZERS': {
         'user_create': 'core.serializers.UserCreateSerializer',
         'current_user': 'core.serializers.UserSerializer',
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
