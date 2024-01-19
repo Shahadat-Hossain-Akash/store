@@ -5,6 +5,7 @@ from tags.models import TaggedItem
 from storefront.admin import Product, ProductAdmin, ProductImageInline
 from .models import User
 
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     add_fieldsets = (
@@ -12,17 +13,27 @@ class UserAdmin(BaseUserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("username", "password1", "password2", "email", "first_name", "last_name"),
+                "fields": (
+                    "username",
+                    "password1",
+                    "password2",
+                    "email",
+                    "first_name",
+                    "last_name",
+                ),
             },
         ),
     )
 
+
 class TagInline(GenericTabularInline):
-    autocomplete_fields = ['tag']
+    autocomplete_fields = ["tag"]
     model = TaggedItem
+
 
 class CustomProductAdmin(ProductAdmin):
     inlines = [TagInline, ProductImageInline]
-    
+
+
 admin.site.unregister(Product)
 admin.site.register(Product, CustomProductAdmin)
